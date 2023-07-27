@@ -23,6 +23,46 @@ void print_error(char *argv0, char *command, int error)
 }
 
 /**
+ * run_command - runs a command
+ *
+ * @st: status
+ * @c_p: child process
+ * @cmd: command
+ * @tk: tokens
+ * @av: arguments
+ * @env: environment variables
+ *
+ * Return: 0 on success, 1 on failure
+ */
+
+int run_command(int st, pid_t c_p, char *cmd, char **tk, char **av, char **env)
+{
+	c_p = fork();
+	if (c_p == -1)
+	{
+		perror(av[0]);
+		free(cmd);
+		return (1);
+	}
+	if (c_p == 0)
+	{
+		if (execve(cmd, tk, env) == -1)
+		{
+			perror(av[0]);
+			free(cmd);
+			exit(1);
+		}
+	}
+	else
+	{
+		free(cmd);
+		wait(&st);
+	}
+	get_last_exit(1, 0);
+	return (0);
+}
+
+/**
  * execute - executes a command
  * @tokens: array of tokens
  * @argv: array of arguments
@@ -50,30 +90,8 @@ int execute(char **tokens, char **argv, char **env, char *line)
 		return (1);
 	}
 	if (!access(command, X_OK))
-	{
-		child_pid = fork();
-		if (child_pid == -1)
-		{
-			perror(argv[0]);
-			free(command);
+		if (run_command(status, child_pid, command, tokens, argv, env))
 			return (1);
-		}
-		if (child_pid == 0)
-		{
-			if (execve(command, tokens, env) == -1)
-			{
-				perror(argv[0]);
-				free(command);
-				exit(1);
-			}
-		}
-		else
-		{
-			free(command);
-			wait(&status);
-		}
-		get_last_exit(1, 0);
-	}
 	return (status);
 }
 
