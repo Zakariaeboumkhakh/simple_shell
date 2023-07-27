@@ -32,7 +32,10 @@ char *get_path(char *cmd)
 	struct stat st;
 
 	if (stat(cmd, &st) == 0)
-		return (cmd);
+	{
+		cmd_path = _strdup(cmd);
+		return (cmd_path);
+	}
 	if (cmd == NULL)
 		return (NULL);
 	if (cmd[0] == '/')
